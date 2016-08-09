@@ -51,7 +51,7 @@ public class Playlist {
     }
 
     public boolean hasNext(){
-        if(mPosition > mSongUrls.size() - 1){
+        if(mPosition < mSongUrls.size()){
             return true;
         }
         else if(mPosition == mSongUrls.size() -1 && mWillRepeat){
@@ -62,6 +62,9 @@ public class Playlist {
         }
     }
 
+    public void resetPlaylist(){
+        mPosition = 0;
+    }
     public boolean isWillRepeat() {
         return mWillRepeat;
     }

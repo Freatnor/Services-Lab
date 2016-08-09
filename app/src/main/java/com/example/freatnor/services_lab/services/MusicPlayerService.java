@@ -42,44 +42,42 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand: ");
         mPlaylist = Playlist.getInstance();
+        //check if it's supposed to pause
         if(intent.getAction().equals(MainActivity.ACTION_PAUSE)){
+            Log.d(TAG, "onStartCommand: pausing in thread");
             mMediaPlayer.pause();
         }
+        //otherwise check if it's supposed to restart from pause
         else if(mMediaPlayer != null && intent.getBooleanExtra("wasPaused", false)){
+            Log.d(TAG, "onStartCommand: trying to restart in thread");
             mMediaPlayer.start();
         }
         else {
+            Log.d(TAG, "onStartCommand: creating a new player");
             mMediaPlayer = new MediaPlayer();
-        }
-        if(mPlaylist.hasNext()){
-            mMediaPlayer = new MediaPlayer();
-            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mPlaylist.resetPlaylist();
 
-            //Try to play the song
-            try{
-                mMediaPlayer.setDataSource(mPlaylist.getNext());
+            //if the playlist hasn't restarted get it going
+            Log.d(TAG, "onStartCommand: Playlist is at index of song " + mPlaylist.getCurrent());
+            if(mMediaPlayer != null && !mMediaPlayer.isPlaying() && mPlaylist.hasNext()){
+                playSong(mMediaPlayer);
             }
-            catch (IOException e){
-                Log.e(TAG, "onStartCommand: Bad song URL", e);
+            else {
+                Log.d(TAG, "onStartCommand: stopping");
+                stopSelf();
             }
+        }
 
-            mMediaPlayer.setOnPreparedListener(this);
-            mMediaPlayer.setOnCompletionListener(this);
-            mMediaPlayer.prepareAsync();
-        }
-        else {
-            stopSelf();
-        }
-        Log.i(TAG, "onStartCommand: finished the playlist, exiting");
+
         return START_STICKY;
 
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
-        Log.i(TAG, "onDestroy: ");
         if (mMediaPlayer != null) mMediaPlayer.release();
+        Log.i(TAG, "onDestroy: ");
+        super.onDestroy();
     }
 
     @Nullable
@@ -95,6 +93,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
+        playSong(mediaPlayer);
+    }
+
+    public void playSong(MediaPlayer mediaPlayer){
         if(mPlaylist.hasNext()){
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
