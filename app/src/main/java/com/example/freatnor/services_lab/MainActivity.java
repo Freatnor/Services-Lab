@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.example.freatnor.services_lab.services.MusicPlayerService;
 
@@ -30,13 +31,29 @@ public class MainActivity extends AppCompatActivity {
 
         mManager =  NotificationManagerCompat.from(this.getApplicationContext());
 
-        if(getIntent().getAction().equals(ACTION_STOP)){
-            stop(null);
+
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        switch(getIntent().getAction()){
+            case ACTION_PLAY:
+            case ACTION_PAUSE:
+                playPause(null);
+                break;
+            case ACTION_STOP:
+                stop(null);
+                break;
+            default:
+                Toast.makeText(MainActivity.this, "Unkown action", Toast.LENGTH_SHORT).show();
         }
     }
 
     public void playPause(View view){
         Intent intent = new Intent(this, MusicPlayerService.class);
+        //intent of the notification to come back to the main activity
+        Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent;
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setSmallIcon(R.drawable.ic_library_music_black_24dp);
@@ -47,7 +64,8 @@ public class MainActivity extends AppCompatActivity {
             mWasPaused = false;
             mIsPlaying = true;
 
-            pendingIntent = PendingIntent.getActivity(MainActivity.this, (int) System.currentTimeMillis(), intent, 0);
+            notificationIntent.setAction(ACTION_PAUSE);
+            pendingIntent = PendingIntent.getActivity(MainActivity.this, (int) System.currentTimeMillis(), notificationIntent, 0);
             builder.addAction(android.R.drawable.ic_media_pause, "Pause", pendingIntent);
         }
         else {
@@ -56,7 +74,8 @@ public class MainActivity extends AppCompatActivity {
             mWasPaused = true;
             mIsPlaying = false;
 
-            pendingIntent = PendingIntent.getActivity(MainActivity.this, (int) System.currentTimeMillis(), intent, 0);
+            notificationIntent.setAction(ACTION_PLAY);
+            pendingIntent = PendingIntent.getActivity(MainActivity.this, (int) System.currentTimeMillis(), notificationIntent, 0);
             builder.addAction(android.R.drawable.ic_media_play, "Play", pendingIntent);
         }
 

@@ -75,7 +75,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
     @Override
     public void onDestroy() {
-        if (mMediaPlayer != null) mMediaPlayer.release();
+        if (mMediaPlayer != null){
+            if (mMediaPlayer.isPlaying())
+                mMediaPlayer.stop();
+            mMediaPlayer.release();
+        }
         Log.i(TAG, "onDestroy: ");
         super.onDestroy();
     }
